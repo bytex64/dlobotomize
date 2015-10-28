@@ -1,0 +1,28 @@
+DLobotomize - Fix D-Link exploits with extreme prejudice
+
+dlobotomize is a tool which uses exploits in the httpd in D-Link's
+network device firmware to stop httpd and stunnel, closing all listening
+ports and thus closing the hole.  This does make it somewhat impossible
+to configure the device, so you should only use it after you have things
+configured, and any reconfiguration will require rebooting the device.
+
+To query whether your device is exploitable:
+
+$ dlobotomize --host 192.168.1.1 --query
+
+And to effect the fix:
+
+$ dlobotomize --host 192.168.1.1 --lockdown
+
+You can also run any arbitrary command like so:
+
+$ dlobotomize --host 192.168.1.1 telnetd
+
+But be aware that blocking commands like telnetd will cause dlobotomize
+to wait on the HTTP response that will never come.
+
+You can read more about the exploit here:
+http://www.devttys0.com/2015/04/hacking-the-d-link-dir-890l/
+
+It works on my DAP-1650, and apparently also on the DIR-890L, and
+probably many other D-Link devices.
